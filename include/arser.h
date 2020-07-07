@@ -217,11 +217,17 @@ class Arser {
     return arg->second->_values.size() > 0 ? true : false;
   }
 
-  template <typename T>
-  struct get_return_type;
+  // template <typename T>
+  // struct get_return_type;
 
   template <typename T>
-  typename get_return_type<T>::type get(const std::string &arg_name);
+  T get_impl(const std::string &arg_name, T *);
+
+  template <typename T>
+  std::vector<T> get_impl(const std::string &arg_name, std::vector<T> *);
+
+  template <typename T>
+  T get(const std::string &arg_name);
 
  private:
   std::string _program_name;
@@ -233,18 +239,18 @@ class Arser {
   friend std::ostream &operator<<(std::ostream &, const Arser &);
 };
 
-template <typename T>
-struct Arser::get_return_type {
-  using type = T;
-};
+// template <typename T>
+// struct Arser::get_return_type {
+//   using type = T;
+// };
 
-template <>
-struct Arser::get_return_type<std::vector<int>> {
-  using type = std::vector<int>;
-};
+// template <>
+// struct Arser::get_return_type<std::vector<int>> {
+//   using type = std::vector<int>;
+// };
 
 template <typename T>
-typename Arser::get_return_type<T>::type Arser::get(const std::string &arg_name)
+T Arser::get_impl(const std::string &arg_name, T *)
 {
   auto arg = _arg_map.find(arg_name);
   if (arg == _arg_map.end())
@@ -273,9 +279,8 @@ typename Arser::get_return_type<T>::type Arser::get(const std::string &arg_name)
   return data;
 }
 
-template <>
-typename Arser::get_return_type<std::vector<int>>::type
-Arser::get<std::vector<int>>(const std::string &arg_name)
+template <typename T>
+std::vector<T> Arser::get_impl(const std::string &arg_name, std::vector<T> *)
 {
   auto arg = _arg_map.find(arg_name);
   if (arg == _arg_map.end())
@@ -283,16 +288,22 @@ Arser::get<std::vector<int>>(const std::string &arg_name)
         "Invalid argument. "
         "There is no argument you are looking for.");
 
-  if (arg->second->_type != TypeName<std::vector<int>>::Get())
+  if (arg->second->_type != TypeName<std::vector<T>>::Get())
     throw std::runtime_error(
         "Type mismatch. "
         "You called get using a type different from the one you specified.");
 
-  std::vector<int> data;
+  std::vector<T> data;
   std::transform(arg->second->_values.begin(), arg->second->_values.end(),
                  std::back_inserter(data),
-                 [](std::string str) -> int { return std::stoi(str); });
+                 [](std::string str) -> T { return std::stoi(str); });
   return data;
+}
+
+template <typename T>
+T Arser::get(const std::string &arg_name)
+{
+  return get_impl(arg_name, static_cast<T *>(nullptr));
 }
 
 std::ostream &operator<<(std::ostream &stream, const Arser &parser)

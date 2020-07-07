@@ -118,3 +118,25 @@ TEST(BasicTest, RequiredOptionalArgument)
   /* act */ /* assert */
   EXPECT_THROW(arser.parse(prompt.argc(), prompt.argv()), std::runtime_error);
 }
+
+TEST(BasicTest, OptionalMultipleArgument)
+{
+  /* arrange */
+  Arser arser;
+
+  arser.add_argument("--add")
+      .nargs(2)
+      .type(arser::DataType::INT32_VEC)
+      .help("Add two numbers.");
+
+  Prompt prompt("./calculator --add 3 5");
+  /* act */
+  arser.parse(prompt.argc(), prompt.argv());
+  /* assert */
+  EXPECT_TRUE(arser["--add"]);
+  std::vector<int> values = arser.get<std::vector<int>>("--add");
+  EXPECT_EQ(3, values.at(0));
+  EXPECT_EQ(5, values.at(1));
+
+  EXPECT_THROW(arser.get<std::vector<float>>("--add"), std::runtime_error);
+}
