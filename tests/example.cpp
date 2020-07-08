@@ -140,3 +140,44 @@ TEST(BasicTest, OptionalMultipleArgument)
 
   EXPECT_THROW(arser.get<std::vector<float>>("--add"), std::runtime_error);
 }
+
+TEST(BasicTest, MultipleOptionalArgument)
+{
+  /* arrange */
+  Arser arser;
+
+  arser.add_argument("--input_path")
+      .nargs(1)
+      .type(arser::DataType::STR)
+      .help("input path of this program.")
+      .required();
+  arser.add_argument("--output_path")
+      .nargs(1)
+      .type(arser::DataType::STR)
+      .help("output path of this program.")
+      .required(true);
+  arser.add_argument("--training_data")
+      .nargs(5)
+      .type(arser::DataType::INT32_VEC)
+      .help("give traning data to this program.")
+      .required();
+
+  Prompt prompt(
+      "./ml --input_path /I/am/in.put --output_path I/am/out.put "
+      "--training_data 2 43 234 3 334");
+  /* act */
+  arser.parse(prompt.argc(), prompt.argv());
+  /* assert */
+  EXPECT_TRUE(arser["--input_path"]);
+  EXPECT_EQ("/I/am/in.put", arser.get<std::string>("--input_path"));
+  EXPECT_TRUE(arser["--output_path"]);
+  EXPECT_EQ("I/am/out.put", arser.get<std::string>("--output_path"));
+  EXPECT_TRUE(arser["--training_data"]);
+  std::vector<int32_t> data =
+      arser.get<std::vector<int32_t>>("--training_data");
+  EXPECT_EQ(2, data.at(0));
+  EXPECT_EQ(43, data.at(1));
+  EXPECT_EQ(234, data.at(2));
+  EXPECT_EQ(3, data.at(3));
+  EXPECT_EQ(334, data.at(4));
+}
