@@ -58,6 +58,14 @@ struct TypeName<std::vector<int>> {
   static const char *Get() { return "vector<int>"; }
 };
 template <>
+struct TypeName<float> {
+  static const char *Get() { return "float"; }
+};
+template <>
+struct TypeName<std::vector<float>> {
+  static const char *Get() { return "vector<float>"; }
+};
+template <>
 struct TypeName<bool> {
   static const char *Get() { return "bool"; }
 };
@@ -70,6 +78,8 @@ struct TypeName<std::string> {
 enum class DataType {
   INT32,
   INT32_VEC,
+  FLOAT,
+  FLOAT_VEC,
   BOOL,
   STR,
 };
@@ -97,6 +107,12 @@ class Argument {
         break;
       case DataType::INT32_VEC:
         _type = "vector<int>";
+        break;
+      case DataType::FLOAT:
+        _type = "float";
+        break;
+      case DataType::FLOAT_VEC:
+        _type = "vector<float>";
         break;
       case DataType::BOOL:
         _type = "bool";
