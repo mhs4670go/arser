@@ -29,6 +29,17 @@
 #include <cstring>
 
 namespace {
+
+template <typename T>
+T lexical_cast(const std::string &str)
+{
+  std::istringstream ss;
+  ss.str(str);
+  T data;
+  ss >> data;
+  return data;
+}
+
 }  // namespace
 
 namespace arser {
@@ -272,11 +283,7 @@ T Arser::get_impl(const std::string &arg_name, T *)
         "You must make sure that the argument is given before accessing it. "
         "You can do it by calling arser[\"argument\"].");
 
-  std::istringstream ss;
-  ss.str(arg->second->_values[0]);
-  T data;
-  ss >> data;
-  return data;
+  return ::lexical_cast<T>(arg->second->_values[0]);
 }
 
 template <typename T>
@@ -296,7 +303,7 @@ std::vector<T> Arser::get_impl(const std::string &arg_name, std::vector<T> *)
   std::vector<T> data;
   std::transform(arg->second->_values.begin(), arg->second->_values.end(),
                  std::back_inserter(data),
-                 [](std::string str) -> T { return std::stoi(str); });
+                 [](std::string str) -> T { return ::lexical_cast<T>(str); });
   return data;
 }
 
