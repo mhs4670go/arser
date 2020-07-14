@@ -73,6 +73,10 @@ template <>
 struct TypeName<std::string> {
   static const char *Get() { return "string"; }
 };
+template <>
+struct TypeName<std::vector<std::string>> {
+  static const char *Get() { return "vector<string>"; }
+};
 
 // supported DataType
 enum class DataType {
@@ -82,6 +86,7 @@ enum class DataType {
   FLOAT_VEC,
   BOOL,
   STR,
+  STR_VEC,
 };
 
 class Arser;
@@ -119,6 +124,9 @@ class Argument {
         break;
       case DataType::STR:
         _type = "string";
+        break;
+      case DataType::STR_VEC:
+        _type = "vector<string>";
         break;
       default:
         throw std::runtime_error("NYI DataType");
