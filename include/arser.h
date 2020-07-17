@@ -363,16 +363,6 @@ class Arser {
   friend std::ostream &operator<<(std::ostream &, const Arser &);
 };
 
-// template <typename T>
-// struct Arser::get_return_type {
-//   using type = T;
-// };
-
-// template <>
-// struct Arser::get_return_type<std::vector<int>> {
-//   using type = std::vector<int>;
-// };
-
 template <typename T>
 T Arser::get_impl(const std::string &arg_name, T *)
 {
