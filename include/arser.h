@@ -41,6 +41,22 @@ T lexical_cast(const std::string &str)
   return data;
 }
 
+template <typename T>
+std::string to_string(const T value)
+{
+  return std::to_string(value);
+}
+template <>
+std::string to_string(const char *value)
+{
+  return std::string(value);
+}
+template <>
+std::string to_string(const bool value)
+{
+  return value ? "true" : "false";
+}
+
 }  // namespace
 
 namespace arser {
@@ -76,6 +92,14 @@ struct TypeName<std::string> {
 };
 template <>
 struct TypeName<std::vector<std::string>> {
+  static const char *Get() { return "vector<string>"; }
+};
+template <>
+struct TypeName<const char *> {
+  static const char *Get() { return "string"; }
+};
+template <>
+struct TypeName<std::vector<const char *>> {
   static const char *Get() { return "vector<string>"; }
 };
 
@@ -159,6 +183,42 @@ class Argument {
     return *this;
   }
 
+  template <typename T>
+  Argument &default_value(const T value)
+  {
+    if ((_nargs == 1 && TypeName<T>::Get() == _type) ||
+        (_nargs > 1 && TypeName<std::vector<T>>::Get() == _type))
+      _values.emplace_back(::to_string(value));
+    else {
+      throw std::runtime_error(
+          "Type mismatch. "
+          "You called default_value() method with a type different "
+          "from the one you specified. "
+          "Please check the type of what you specified in "
+          "add_argument() method.");
+    }
+    return *this;
+  }
+
+  template <typename T, typename... Ts>
+  Argument &default_value(const T value, const Ts... values)
+  {
+    if ((_nargs == 1 && TypeName<T>::Get() == _type) ||
+        (_nargs > 1 && TypeName<std::vector<T>>::Get() == _type)) {
+      _values.emplace_back(::to_string(value));
+      default_value(values...);
+    }
+    else {
+      throw std::runtime_error(
+          "Type mismatch. "
+          "You called default_value() method with a type different "
+          "from the one you specified. "
+          "Please check the type of what you specified in "
+          "add_argument() method.");
+    }
+    return *this;
+  }
+
  private:
   std::string _name;
   std::string _type;
@@ -232,6 +292,7 @@ class Arser {
         if (parg_num) {
           auto it = _positional_arg_vec.begin();
           std::advance(it, _positional_arg_vec.size() - parg_num);
+          (*it)._values.clear();
           (*it)._values.emplace_back(arg_name);
           parg_num--;
         }
@@ -244,6 +305,7 @@ class Arser {
       {
         // check whether arg is required or not
         if (arg->second->_is_required) required_oarg_num--;
+        arg->second->_values.clear();
         for (uint32_t n = 0; n < arg->second->_nargs; n++) {
           if (c >= argc)
             throw std::runtime_error(
